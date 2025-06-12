@@ -14,6 +14,8 @@ if len(args) > 2:
 
 # create a random grid with the specified parameters, search for a spanning path, and print an ascii depiction of the results
 grid = Grid(gridSize, edgeProbability)
-FloodFill(grid, 0, int(gridSize / 2))
+entrance = grid.At(0, int(gridSize / 2))
+exit = FloodFill(grid, 0, int(gridSize / 2))
 grid.AsciiPlot()
-    
+filename = "./output/" + str(gridSize) + "_" + str(edgeProbability) + ".png"
+grid.GenerateImage(filename, entrance, exit)
