@@ -5,9 +5,7 @@
   
 - **Visualisation**  
   Output images representing the generated grids, using a simple tileset e.g.
-  ![alt text](https://github.com/jsnadden/percolation/examples/1.png "20x20, p=.1")
-  ![alt text](https://github.com/jsnadden/percolation/examples/2.png "20x20, p=.5")
-  ![alt text](https://github.com/jsnadden/percolation/examples/3.png "20x20, p=.9")
+  ![2](https://github.com/jsnadden/percolation/blob/main/examples/2.png "20x20, p=.5")
   
 - **Computes topological features**  
   Efficiently identifies clusters, optimal left-to-right paths (when cluster is spanning) etc.
