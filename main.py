@@ -1,0 +1,19 @@
+import sys
+from Grid import Grid
+from FloodFill import FloodFill
+
+gridSize = 10
+edgeProbability = .5
+
+# parse command line arguments
+args = sys.argv
+if len(args) > 1:
+    gridSize = int(args[1])
+if len(args) > 2:
+    edgeProbability = float(args[2])
+
+# create a random grid with the specified parameters, search for a spanning path, and print an ascii depiction of the results
+grid = Grid(gridSize, edgeProbability)
+FloodFill(grid, 0, int(gridSize / 2))
+grid.AsciiPlot()
+    
