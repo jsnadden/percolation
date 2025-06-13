@@ -1,5 +1,6 @@
 import random
 from PIL import Image
+import colorsys
 from Site import Site
 
 # a square grid of sites, with nearest-neighbour edges chosen at random
@@ -38,7 +39,9 @@ class Grid:
 
 	# print ascii display of grid (highlights a spanning path, if one is found)
 	# requires a sufficiently large terminal window to display correctly
-	def AsciiPlot(self):
+	def GenerateAsciiImage(self, clusters = []):
+		ansiColours = [f"\033[38;5;{i}m" for i in range(256)]
+
 		for y in range(self.size):
 			horizontal = ""
 			vertical = ""
@@ -46,16 +49,9 @@ class Grid:
 				site = self.At(x,y)
 
 				# draw site
-				if site.marked:
-					horizontal += "\033[92m"
-					horizontal += "＠"
-					horizontal += "\033[0m"
-				elif site.added:
-					horizontal += "\033[94m"
-					horizontal += "Ｏ"
-					horizontal += "\033[0m"
-				else:
-					horizontal += "ｏ"
+				horizontal += ansiColours[site.clusterIndex % 256]
+				horizontal += "Ｏ"
+				horizontal += "\033[0m"
 
 				# draw edges
 				if x < self.size - 1:
@@ -73,11 +69,12 @@ class Grid:
 			print(vertical)
 
 	# generate bitmap image from grid
-	def GenerateImage(self, outputFilepath, start, end):
+	def GenerateTilemappedImage(self, start = None, end = None):
 		tiles = []
 		for i in range(16):
 			file = "./tiles/" + hex(i)[-1].upper() + ".png"
 			tiles.append(Image.open(file))
+		tiles.append(Image.open("./tiles/X.png"))
 		
 		imageSize = 32 * self.size
 		image = Image.new("RGB", (imageSize, imageSize))
@@ -85,14 +82,35 @@ class Grid:
 		for y in range(self.size):
 			for x in range(self.size):
 				site = self.At(x,y)
+
 				offset = 0
 				if site == start and site.x == 0:
 					offset = 4
 				if site == end and site.x == self.size - 1:
 					offset = 1
+
 				image.paste(tiles[site.TileIndex() + offset], (32 * x, 32 * y))
-		
-		image.save(outputFilepath)
+
+				if end and site.marked:
+					image.paste(tiles[-1], (32 * x, 32 * y), tiles[-1])
 
 		for tile in tiles:
 			tile.close()
+		
+		return image
+	
+	def GenerateClusterImage(self, scale = 1, maxColours = 256):
+		image = Image.new("RGB", (scale * self.size, scale * self.size))
+
+		colours = [tuple(round(c * 255) for c in colorsys.hsv_to_rgb(h / maxColours, 1, 1)) for h in range(maxColours)]
+		random.shuffle(colours)
+
+		for y in range(self.size):
+			for x in range(self.size):
+				site = self.At(x,y)
+				colour = colours[site.clusterIndex % maxColours]
+				for j in range(scale):
+					for i in range(scale):
+						image.putpixel((scale * x + i, scale * y + j), colour)
+		
+		return image

@@ -19,6 +19,9 @@ class Site:
         self.parent = None
         self.marked = False
 
+        # index of site's cluster
+        self.clusterIndex = 0
+
     def Neighbour(self, index):
             index = index % 4
             if index == 0:

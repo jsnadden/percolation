@@ -1,8 +1,8 @@
 
 
-# search for spanning cluster (via FloodFill)
+# search for optimal spanning path (via FloodFill)
 def FloodFill(grid, x, y):
-	# initialise search data
+	# initialise grid data
 	for site in grid.sites:
 		site.added = False
 		site.checked = False
@@ -41,3 +41,41 @@ def FloodFill(grid, x, y):
 			x = x.parent
 
 	return output
+
+def FindClusters(grid):
+	# initialise grid data
+	for site in grid.sites:
+		site.added = False
+		site.checked = False
+	
+	clusters = []
+	index = 0
+
+	for site in grid.sites:
+		if site.added:
+			continue
+
+		cluster = [site]
+		toCheck = 1
+		site.added = True
+		site.clusterIndex = index
+
+		while toCheck > 0:
+			for site in cluster:
+				if site.checked:
+					continue
+				for i in range(4):
+					neighbour = site.Neighbour(i)
+					if neighbour:
+						if not neighbour.added:
+							cluster.append(neighbour)
+							neighbour.added = True
+							neighbour.clusterIndex = index
+							toCheck += 1
+				site.checked = True
+				toCheck -= 1
+		clusters.append(cluster)
+		index += 1
+	return clusters
+
+
