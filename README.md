@@ -1,19 +1,14 @@
 ﻿# Pycolation
 
 - **2D Bond Percolation Model**  
-  Generate pseudorandom square grids with a given size and bond probability
-  
-- **Visualisation**  
-  Output images representing the generated grids, using a simple tileset e.g. the following 20x20 examples:
-  p = 0.1  
-  ![1](https://github.com/jsnadden/percolation/blob/main/examples/1.png "20x20, p=.1")  
-  p = 0.5  
-  ![2](https://github.com/jsnadden/percolation/blob/main/examples/2.png "20x20, p=.5")
-  p = 0.9  
-  ![3](https://github.com/jsnadden/percolation/blob/main/examples/3.png "20x20, p=.9")
+  Generate pseudorandom square grids with a given size and bond probability  
   
 - **Computes topological features**  
-  Efficiently identifies clusters, optimal left-to-right paths (when cluster is spanning) etc.
+  Efficiently identifies clusters, optimal left-to-right spanning paths (if they exist) etc.
+  
+- **Visualisation**  
+  Outputs various graphical representations of the generated grids, e.g. showing cluster formation,
+  ![1](https://github.com/jsnadden/percolation/blob/main/examples/clusters.png "colour-coded clusters")
 
 - **Stat-mech simulation (in progress)**  
-  Compute macroscopic quantities (average cluster size etc.), plotting them against model parameters
+  Compute macroscopic quantities (average cluster diameter etc.), plotting them against model parameters
