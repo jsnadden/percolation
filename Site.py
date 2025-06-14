@@ -3,24 +3,18 @@
 # contains per-vertex data
 class Site:
     def __init__(self, x, y):
-        # planar coordinates
+        # grid data (position and graph adjacencies)
         self.x = x
         self.y = y
-
-        # list of neighbouring sites
         self.east = None
         self.north = None
         self.west = None
         self.south = None
 
-        # flags used in FloodFill 
-        self.added = False
-        self.checked = False
+        # data for cluster analysis
+        self.onPath = False
         self.parent = None
-        self.marked = False
-
-        # index of site's cluster
-        self.clusterIndex = 0
+        self.clusterIndex = -1
 
     def Neighbour(self, index):
             index = index % 4

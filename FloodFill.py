@@ -1,81 +1,40 @@
 
 
-# search for optimal spanning path (via FloodFill)
-def FloodFill(grid, x, y):
-	# initialise grid data
+def AnalyseClusters(grid):
+	# reset site data
 	for site in grid.sites:
-		site.added = False
-		site.checked = False
+		site.onPath = False
 		site.parent = None
-		site.marked = False    
-	seed = grid.At(x,y)
-	found = False
-	output = None
-	cluster = [seed]
-	toCheck = 1
-	seed.added = True
-	
-	while toCheck > 0:
-		for site in cluster:
-			if site.checked == False:
-				for i in range(4):
-					neighbour = site.Neighbour(i)
-					if neighbour:
-						if not(found) and neighbour.x == grid.size - 1:
-							output = neighbour
-							found = True
-							neighbour.parent = site
-						if not neighbour.added:
-							cluster.append(neighbour)
-							neighbour.added = True
-							neighbour.parent = site
-							toCheck += 1
-				site.checked = True
-				toCheck -= 1
-	
-	if found:
-		# mark our spanning path
-		x = output
-		while x != None:
-			x.marked = True
-			x = x.parent
+		site.clusterIndex = -1
 
-	return output
-
-def FindClusters(grid):
-	# initialise grid data
-	for site in grid.sites:
-		site.added = False
-		site.checked = False
-	
+	# initialise cluster data
 	clusters = []
 	index = 0
 
+	# search the grid for sites not yet clustered
 	for site in grid.sites:
-		if site.added:
+		if site.clusterIndex > -1:
 			continue
 
-		cluster = [site]
-		toCheck = 1
-		site.added = True
+		# new cluster found, initialise floodfill data
+		cluster = []
+		queue = [site]
 		site.clusterIndex = index
 
-		while toCheck > 0:
-			for site in cluster:
-				if site.checked:
-					continue
-				for i in range(4):
-					neighbour = site.Neighbour(i)
-					if neighbour:
-						if not neighbour.added:
-							cluster.append(neighbour)
-							neighbour.added = True
-							neighbour.clusterIndex = index
-							toCheck += 1
-				site.checked = True
-				toCheck -= 1
+		# floodfill to fill out cluster
+		while queue:
+			site = queue.pop(0)
+			for i in range(4):
+				neighbour = site.Neighbour(i)
+				if neighbour:
+					if neighbour.clusterIndex == -1:
+						queue.append(neighbour)
+						neighbour.clusterIndex = index
+			cluster.append(site)
+		
 		clusters.append(cluster)
 		index += 1
+	
 	return clusters
 
 

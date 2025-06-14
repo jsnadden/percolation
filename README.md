@@ -11,4 +11,5 @@
   ![1](https://github.com/jsnadden/percolation/blob/main/examples/clusters.png "colour-coded clusters")
 
 - **Stat-mech simulation (in progress)**  
-  Compute macroscopic quantities (average cluster diameter etc.), plotting them against model parameters
+  Compute macroscopic quantities (average cluster diameter etc.), plotting them against model parameters, e.g. to see the phase transition at p=0.5
+  ![2](https://github.com/jsnadden/percolation/blob/main/examples/percolation_transition.png "Percolation phase transition")
