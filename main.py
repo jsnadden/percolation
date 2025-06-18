@@ -1,45 +1,48 @@
 import sys
-import time
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 from Grid import Grid
+from StatMech import PhaseTransition
+
 
 gridSize = 10
-dataPoints = 20
-samples = 1
+p = .5
 
 # parse command line arguments
 args = sys.argv
 if len(args) > 1:
     gridSize = int(args[1])
 if len(args) > 2:
-    dataPoints = int(args[2])
-if len(args) > 3:
-    samples = int(args[3])
+    p = float(args[2])
 
-pValues = [(i+1)/dataPoints for i in range(dataPoints)]
-data = []
+X = [i + 1 for i in range(gridSize)]
+Y = []
 
-for p in pValues:
-    x = 0
-    for s in range(samples):
-        grid = Grid(gridSize, p)
-        clusterSizes = np.array([len(c) for c in grid.clusters])
-        x += np.max(clusterSizes)
-    data.append(x/samples)
+samples = 50
 
-plt.plot(pValues, np.array(data))
-plt.title(f"Mean max cluster sizes ({gridSize}x{gridSize} grid, {samples} samples per point)")
-plt.xlabel("p")
-plt.ylabel("Max cluster size")
-plt.savefig(f"./output/max_cluster_sizes_{gridSize}_{samples}.png")
+for x in X:
+    subtotal = 0
+    for repeat in range(samples):
+        grid = Grid(x, p)
+        cluster = grid.clusters[grid.maxClusterIndex]
+        subtotal += grid.FurthestFrom(random.choice(cluster))[1]
+
+    Y.append(subtotal / samples)
+
+A = np.vstack([X, np.ones(len(X))]).T
+m, c = np.linalg.lstsq(A, Y)[0]
+Z = [m*x+c for x in X]
+
+plt.plot(X, Y, label = "measured")
+plt.plot(X, Z, label = f"least squares (m = {m:.2f}, c = {c:.2f})")
+plt.legend()
+plt.title(f"Mean eccentricity of sites in largest cluster\n({samples} samples per point, p = {p})")
+plt.xlabel("Grid size")
+plt.ylabel("Eccentricity")
+plt.savefig(f"./output/eccentricity_scaling.png")
 plt.show()
-
-#clusterImage = grid.GenerateClusterImage(10)
-#clusterImage.save(f"./output/clusters_{gridSize}_{edgeProbability:.2f}.png")
-#clusterImage.show()
-#
-#if (gridSize < 35):
-#    asciiImage = grid.GenerateAsciiImage()
-#    asciiImage.Print()
+#grid.GenerateAsciiImage(print = True, onlyLargestCluster = True, seed = site)
+#print(f"Largest cluster contains {grid.maxClusterSize} sites.")
+#print(f"Furthest point from the site ({site.x},{site.y}) is ({furthest[0].x},{furthest[0].y}) at a distance of {furthest[1]}")

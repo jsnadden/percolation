@@ -12,22 +12,24 @@ class Site:
         self.south = None
 
         # data for cluster analysis
+        self.clusterIndex = -1
         self.onPath = False
         self.parent = None
-        self.clusterIndex = -1
+        self.searchFlag = False
 
     def Neighbour(self, index):
-            index = index % 4
-            if index == 0:
-                return self.east
-            elif index == 1:
-                return self.north
-            elif index == 2:
-                return self.west
-            elif index == 3:
-                return self.south
-            else:
-                return None
+        index = index % 4
+
+        if index == 0:
+            return self.east
+        elif index == 1:
+            return self.north
+        elif index == 2:
+            return self.west
+        elif index == 3:
+            return self.south
+        else:
+            return None
     
     def TileIndex(self):
          sum = 0
