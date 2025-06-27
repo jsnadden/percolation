@@ -24,7 +24,7 @@ class AsciiImage:
 
 # a square grid of sites, with nearest-neighbour edges chosen at random
 class Grid:
-	def __init__(self, size, p):
+	def __init__(self, size, p, clusters=True, diameter=False):
 		self.size = size
 		self.p = p
 
@@ -32,15 +32,19 @@ class Grid:
 		self.maxClusterIndex = 0
 		self.maxClusterSize = 0
 
+		self.diameter = 0
+		self.start = None
+		self.end = None
+
 		# populate grid sites
 		self.sites = []
 		for y in range(self.size):
 			for x in range(self.size):
 				self.sites.append(Site(x,y))
 		
-		self.Reset()
+		self.Reset(clusters, diameter)
 	
-	def Reset(self):
+	def Reset(self, clusters, diameter):
 		# reset site data
 		for s in self.sites:
 			s.east = None
@@ -68,7 +72,19 @@ class Grid:
 						s.south = south
 						south.north = s
 
-		self.AnalyseClusters()
+		if clusters:
+			self.AnalyseClusters()
+		else:
+			self.clusters = []
+			self.maxClusterIndex = 0
+			self.maxClusterSize = 0
+
+		if diameter:
+			self.FindDiameter()
+		else:
+			self.diameter = 0
+			self.start = None
+			self.end = None
 
 	def AnalyseClusters(self):
 		index = 0
@@ -78,12 +94,12 @@ class Grid:
 			if site.clusterIndex >= 0:
 				continue
 
-			# new cluster found, initialise floodfill data
+			# new cluster found, initialise search data
 			cluster = []
 			queue = [site]
 			site.clusterIndex = index
 
-			# floodfill to fill out cluster
+			# bfs to fill out cluster
 			while queue:
 				site = queue.pop(0)
 				for i in range(4):
@@ -106,47 +122,54 @@ class Grid:
 	def At(self, x, y):
 		return self.sites[y * self.size + x]
 	
-	# finds a site of maximal graph distance from the given seed site, within the same
-	# cluster. Returns a pair consisting of that site and its distance from seed
-	def FurthestFrom(self, seed):
-		if not seed:
+	# computes graph eccentricity (max distance to another site with the same cluster) for a given site
+	# sets the eccentricity data field and returns a site of that max distance away
+	def Eccentricity(self, start):
+		if not start:
 			return None
 		
-		assert seed in self.sites, "Given Site object does not belong to this Grid"
+		assert start in self.sites, "Given Site object does not belong to this Grid"
 
 		distance = 0
-		furthest = None
-		queue = [seed]
-		cluster = self.clusters[seed.clusterIndex]
+		end = None
 
-		for s in cluster:
-			s.searchFlag = False
-			s.parent = None
-			s.onPath = False
-		seed.searchFlag = True
-		seed.parent = None
+		sites = self.clusters[start.clusterIndex] if self.clusters else self.sites
+		for site in sites:
+			site.searchFlag = False
+
+		queue = [start]
+		start.searchFlag = True
 
 		while queue:
 			distance += 1
 			nextQueue = []
 			for site in queue:
-				furthest = site
-
+				end = site
 				for i in range(4):
 					neighbour = site.Neighbour(i)
-					if neighbour and not neighbour.searchFlag:
-						neighbour.searchFlag = True
-						neighbour.parent = site
-						nextQueue.append(neighbour)
+					if neighbour:
+						if not neighbour.searchFlag:
+							neighbour.searchFlag = True
+							nextQueue.append(neighbour)
 			queue = nextQueue
 		
-		furthest.onPath = True
-		path = furthest
-		while path.parent:
-			path = path.parent
-			path.onPath = True
+		start.eccentricity = distance
+		return end
 
-		return [furthest, distance]
+	# find a path of maximal length (i.e. graph diameter) using breadth-first
+	# sets start, end, diameter fields, no return
+	def FindDiameter(self):
+		diam = 0
+
+		for site in self.sites:
+			end = self.Eccentricity(site)
+			ecc = site.eccentricity
+			if ecc > diam:
+				diam = ecc
+				self.start = site
+				self.end = end
+
+		self.diameter = diam
 
 	# print ascii display of grid
 	# (requires a sufficiently large terminal window to display correctly)

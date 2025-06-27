@@ -3,19 +3,21 @@
 # contains per-vertex data
 class Site:
     def __init__(self, x, y):
-        # grid data (position and graph adjacencies)
+        # grid data (location, adjacencies, etc.)
         self.x = x
         self.y = y
         self.east = None
         self.north = None
         self.west = None
         self.south = None
+        self.eccentricity = 0
 
         # data for cluster analysis
         self.clusterIndex = -1
         self.onPath = False
         self.parent = None
         self.searchFlag = False
+
 
     def Neighbour(self, index):
         index = index % 4
