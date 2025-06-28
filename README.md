@@ -2,14 +2,12 @@
 
 - **2D Bond Percolation Model**  
   Generate pseudorandom square grids with a given size and bond probability  
-  ![1](https://github.com/jsnadden/percolation/blob/main/output_examples/tilemapped.png "percolation visualised for three values of p")
   
 - **Computes topological/graph-theoretic features**  
-  Efficiently identifies clusters, computes their diameters etc.
-  ![1](https://github.com/jsnadden/percolation/blob/main/output_examples/diameter_scaling.png "on average, the resultant graph diameters scale linearly with grid size")
+  Efficiently identify clusters, compute graph diameters etc.
   
 - **Visualisation**  
-  Outputs various graphical representations of the generated grids, e.g. showing cluster formation,
+  Output various graphical representations of the generated grids, e.g. showing cluster formation,
   ![1](https://github.com/jsnadden/percolation/blob/main/output_examples/clusters.png "colour-coded clusters")
 
 - **Stat-mech simulation (in progress)**  
