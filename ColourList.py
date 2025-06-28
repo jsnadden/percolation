@@ -2,7 +2,7 @@ from PIL import ImageColor
 
 # list copied from https://stackoverflow.com/questions/1168260/algorithm-for-generating-unique-colors
 hexColours = [
-"#000000",
+#"#000000",
 "#00FF00",
 "#0000FF",
 "#FF0000",

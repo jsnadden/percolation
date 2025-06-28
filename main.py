@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+from time import time
 
 from Grid import Grid
 from StatMech import PhaseTransition
@@ -19,30 +20,45 @@ if len(args) > 3:
     sizeStep = int(args[3])
 
 sizes = [sizeStep * (i + 1) for i in range(sizeCount)]
+diameters = []
+times = []
 
-def ComputeMeanDiameter(size):
+for size in sizes:
     subtotal = 0
+    startTime = time()
     for sample in range(samplesPerSize):
-        grid = Grid(size, .5, False, True)
-        subtotal += grid.diameter
-    return subtotal / samplesPerSize
+        grid = Grid(size, .5)
+        diameter = len(grid.DiametricPath())
+        subtotal += diameter
+    times.append((time() - startTime)/samplesPerSize)
+    diameters.append(subtotal/samplesPerSize)
 
-diameters = [ComputeMeanDiameter(size) for size in sizes] 
+timeModel = np.poly1d(np.polyfit(sizes, np.log(times), 1))
+timeCoeffs = timeModel.coefficients
+timeR = np.corrcoef(sizes, np.log(times))[0,1]
+timeR2 = timeR * timeR
 
-#A = np.vstack([[size for size in sizes], np.ones(len(sizes))]).T
-#m, c = np.linalg.lstsq(A, diameters)[0]
-#predictions = [m*x + c for x in sizes]
+diamModel = np.poly1d(np.polyfit(sizes, diameters, 1))
+diamCoeffs = diamModel.coefficients
+diamR = np.corrcoef(sizes, diameters)[0,1]
+diamR2 = diamR * diamR
 
-model = np.poly1d(np.polyfit(sizes, diameters, 1))
-coeffs = model.coefficients
-r = np.corrcoef(sizes, diameters)[0,1]
-polyline = np.linspace(0, sizeCount * sizeStep, sizeCount)
+plt.scatter(sizes, times, label = "measured", color='k')
+plt.plot(sizes, np.exp(timeModel(sizes)), label = f"least-squares exponential model (log(y) = {timeCoeffs[0]:.2f} x + {timeCoeffs[1]:.2f}, r^2 = {timeR2:.2f})", color='b')
+plt.legend()
+plt.title(f"Mean computation time for diameter of random 2d grid subgraphs (p = 0.5) \n({samplesPerSize} samples per datum)")
+plt.xlabel("Grid size")
+plt.ylabel("Time (s)")
+plt.savefig(f"./output/diameter_timing.png")
+plt.show()
+plt.clf()
 
 plt.scatter(sizes, diameters, label = "measured", color='k')
-plt.plot(polyline, model(polyline), label = f"least-squares linear model (y = {coeffs[0]:.2f} x + {coeffs[1]:.2f}, r^2 = {r*r:.2f})", color='r')
+plt.plot(sizes, diamModel(sizes), label = f"least-squares linear model (y = {diamCoeffs[0]:.2f} x + {diamCoeffs[1]:.2f}, r^2 = {diamR2:.2f})", color='b')
 plt.legend()
-plt.title(f"Mean diameter of random grid subgraphs (p = 0.5) \n({samplesPerSize} samples per datum)")
+plt.title(f"Mean diameter of random subgraphs of a 2d grid (p = 0.5) \n({samplesPerSize} samples per point)")
 plt.xlabel("Grid size")
 plt.ylabel("Diameter")
 plt.savefig(f"./output/diameter_scaling.png")
 plt.show()
+plt.clf()

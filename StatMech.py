@@ -10,7 +10,7 @@ def PhaseTransition(gridSize = 10, dataPoints = 20, samples = 1):
 	for p in pValues:
 		x = 0
 		for s in range(samples):
-			x += Grid(gridSize, p).maxClusterSize
+			x += Grid(gridSize, p).sizeOfLargestCluster
 		meanMaxClusterSize.append(x / samples)
 	
 	data = [pValues, meanMaxClusterSize]

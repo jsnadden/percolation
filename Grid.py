@@ -24,17 +24,13 @@ class AsciiImage:
 
 # a square grid of sites, with nearest-neighbour edges chosen at random
 class Grid:
-	def __init__(self, size, p, clusters=True, diameter=False):
+	def __init__(self, size, p):
 		self.size = size
 		self.p = p
 
 		self.clusters = []
-		self.maxClusterIndex = 0
-		self.maxClusterSize = 0
-
-		self.diameter = 0
-		self.start = None
-		self.end = None
+		self.indexOfLargestCluster = 0
+		self.sizeOfLargestCluster = 0
 
 		# populate grid sites
 		self.sites = []
@@ -42,49 +38,39 @@ class Grid:
 			for x in range(self.size):
 				self.sites.append(Site(x,y))
 		
-		self.Reset(clusters, diameter)
+		self.Reset(True)
 	
-	def Reset(self, clusters, diameter):
+	def Reset(self, randomise = False):
 		# reset site data
 		for s in self.sites:
 			s.east = None
 			s.north = None
 			s.west = None
 			s.south = None
-			s.onPath = False
+			s.clusterIndex = -1		
+
+			s.flag = False
+			s.flag2 = False
 			s.parent = None
-			s.clusterIndex = -1
 
-		# populate adjacencies randomly
-		for s in self.sites:
-			# horizontal edges
-			if s.x < self.size - 1:
-				if random.random() < self.p:
-					east = self.At(s.x + 1, s.y)
-					if s.east == None:
-						s.east = east
-						east.west = s
-			# vertical edges
-			if s.y < self.size - 1:
-				if random.random() < self.p:
-					south = self.At(s.x, s.y + 1)
-					if s.south == None:
-						s.south = south
-						south.north = s
-
-		if clusters:
+		if randomise:
+			# populate adjacencies randomly
+			for s in self.sites:
+				# horizontal edges
+				if s.x < self.size - 1:
+					if random.random() < self.p:
+						east = self.At(s.x + 1, s.y)
+						if s.east == None:
+							s.east = east
+							east.west = s
+				# vertical edges
+				if s.y < self.size - 1:
+					if random.random() < self.p:
+						south = self.At(s.x, s.y + 1)
+						if s.south == None:
+							s.south = south
+							south.north = s
 			self.AnalyseClusters()
-		else:
-			self.clusters = []
-			self.maxClusterIndex = 0
-			self.maxClusterSize = 0
-
-		if diameter:
-			self.FindDiameter()
-		else:
-			self.diameter = 0
-			self.start = None
-			self.end = None
 
 	def AnalyseClusters(self):
 		index = 0
@@ -112,72 +98,65 @@ class Grid:
 			
 			self.clusters.append(cluster)
 			clusterSize = len(cluster)
-			if clusterSize > self.maxClusterSize:
-				self.maxClusterSize = clusterSize
-				self.maxClusterIndex = index
+			if clusterSize > self.sizeOfLargestCluster:
+				self.sizeOfLargestCluster = clusterSize
+				self.indexOfLargestCluster = index
 			
 			index += 1
+
+	# returns a path of maximal length
+	def DiametricPath(self):
+		path = []
+		diam = 0
+
+		for cluster in self.clusters:
+			if len(cluster) <= diam + 1: # ignore small clusters
+				continue
+
+			for start in cluster:
+				end = None
+				ecc = 0
+
+				for s in cluster:
+					s.flag = False
+					s.parent = None
+				start.flag = True
+				queue = [start]
+
+				while queue:
+					ecc += 1
+					frontier = []
+					for site in queue:
+						for dir in range(4):
+							neighbour = site.Neighbour(dir)
+							if neighbour:
+								if not neighbour.flag:
+									neighbour.flag = True
+									frontier.append(neighbour)
+									neighbour.parent = site
+									end = neighbour
+					queue = frontier
+				
+				start.eccentricity = ecc
+				
+				if ecc > diam:
+					diam = ecc
+					
+					path = [end]
+					while end:
+						end = end.parent
+						path.insert(0, end)
+		
+		return path
 
 	# return the site object at specified grid point
 	def At(self, x, y):
 		return self.sites[y * self.size + x]
-	
-	# computes graph eccentricity (max distance to another site with the same cluster) for a given site
-	# sets the eccentricity data field and returns a site of that max distance away
-	def Eccentricity(self, start):
-		if not start:
-			return None
-		
-		assert start in self.sites, "Given Site object does not belong to this Grid"
 
-		distance = 0
-		end = None
-
-		sites = self.clusters[start.clusterIndex] if self.clusters else self.sites
-		for site in sites:
-			site.searchFlag = False
-
-		queue = [start]
-		start.searchFlag = True
-
-		while queue:
-			distance += 1
-			nextQueue = []
-			for site in queue:
-				end = site
-				for i in range(4):
-					neighbour = site.Neighbour(i)
-					if neighbour:
-						if not neighbour.searchFlag:
-							neighbour.searchFlag = True
-							nextQueue.append(neighbour)
-			queue = nextQueue
-		
-		start.eccentricity = distance
-		return end
-
-	# find a path of maximal length (i.e. graph diameter) using breadth-first
-	# sets start, end, diameter fields, no return
-	def FindDiameter(self):
-		diam = 0
-
-		for site in self.sites:
-			end = self.Eccentricity(site)
-			ecc = site.eccentricity
-			if ecc > diam:
-				diam = ecc
-				self.start = site
-				self.end = end
-
-		self.diameter = diam
-
-	# print ascii display of grid
-	# (requires a sufficiently large terminal window to display correctly)
-	def GenerateAsciiImage(self, print = True, onlyLargestCluster = False, seed = None):
+	# print ascii display of grid to terminal (if it's narrow enough to fit)
+	def GenerateAsciiImage(self, print = True, onlyLargestCluster = False, highlight = []):
 		ansiColours = [f"\033[38;2;{c[0]};{c[1]};{c[2]}m" for c in rgbColours]
 		lines = []
-
-		furthest = self.FurthestFrom(seed)[0]
 
 		for y in range(self.size):
 			horizontal = ""
@@ -185,18 +164,14 @@ class Grid:
 			for x in range(self.size):
 				site = self.At(x,y)
 
-				if onlyLargestCluster and site.clusterIndex != self.maxClusterIndex:
+				if onlyLargestCluster and site.clusterIndex != self.indexOfLargestCluster:
 					# skip
 					horizontal += "    "
 					vertical += "    "
 				else:
 					# draw site
 					horizontal += ansiColours[site.clusterIndex % maxColours]
-					if site == seed:
-						horizontal += "Ｓ"
-					elif site == furthest:
-						horizontal += "Ｅ"
-					elif site.onPath:
+					if site in highlight:
 						horizontal += "＠"
 					else:
 						horizontal += "ｏ"
